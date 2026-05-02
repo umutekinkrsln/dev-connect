@@ -15,10 +15,22 @@ function App() {
   const [input, setInput] = useState('');
   const [username] = useState('Dev_' + Math.floor(Math.random() * 1000));
   const messagesEndRef = useRef<HTMLDivElement>(null);
-
-  // Otomatik aşağı kaydırma fonksiyonu
+  const [typingUser, setTypingUser] = useState<string | null>(null);
+  const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  };
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setInput(e.target.value);
+
+    socket.emit('typing', { username, isTyping: true });
+
+    if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
+    
+    typingTimeoutRef.current = setTimeout(() => {
+      socket.emit('typing', { username, isTyping: false });
+    }, 2000);
   };
 
   useEffect(() => {
@@ -30,9 +42,18 @@ function App() {
       setMessages((prev) => [...prev, msg]);
     });
 
+    socket.on('user_typing', (data: { username: string; isTyping: boolean }) => {
+      if (data.isTyping) {
+        setTypingUser(data.username);
+      } else {
+        setTypingUser(null);
+      }
+    });
+
     return () => {
       socket.off('previous_messages');
       socket.off('receive_message');
+      socket.off('user_typing');
     };
   }, []);
 
@@ -78,13 +99,20 @@ function App() {
           })}
           <div ref={messagesEndRef} />
         </div>
-
+<div className="h-6 ml-4">
+  {typingUser && (
+    <p className="text-xs text-gray-400 animate-pulse">
+      <span className="font-bold text-emerald-400">{typingUser}</span> yazıyor...
+    </p>
+  )}
+</div>
+{/* ... Input alanı */}
         {/* Input Area */}
         <div className="p-4 bg-gray-900 border-t border-gray-800 flex gap-2">
           <input
             type="text"
             value={input}
-            onChange={(e) => setInput(e.target.value)}
+            onChange={handleInputChange}
             onKeyDown={(e) => e.key === 'Enter' && sendMessage()}
             className="flex-1 bg-gray-950 border border-gray-700 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all text-sm"
             placeholder="Kodla ilgili bir şeyler sor..."
