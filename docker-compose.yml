@@ -1,0 +1,12 @@
+version: '3.8'
+services:
+  db:
+    image: postgres:15
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: dev_password
+      POSTGRES_DB: devconnect_db
+      POSTGRES_HOST_AUTH_METHOD: trust # Bunu ekledik, kapıyı sonuna kadar açar
+    ports:
+      - "5433:5432"
