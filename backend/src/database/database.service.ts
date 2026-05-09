@@ -6,14 +6,24 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
   private pool: Pool;
 
   constructor() {
-  this.pool = new Pool({
-  user: 'postgres',
-  host: '127.0.0.1',
-  database: 'devconnect_db',
-  password: '12345',
-  port: 5433, 
-});
-  }
+  const isProduction = process.env.DATABASE_URL !== undefined;
+
+  this.pool = new Pool(
+    isProduction
+      ? {
+          connectionString: process.env.DATABASE_URL,
+          ssl: { rejectUnauthorized: false },
+        }
+      : {
+          user: 'postgres',
+          host: '127.0.0.1',
+          database: 'devconnect_db',
+          password: '12345', 
+          port: 5433,
+          ssl: false, 
+        },
+  );
+}
 
   async onModuleInit() {
     try {
