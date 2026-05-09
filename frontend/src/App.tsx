@@ -1,7 +1,7 @@
 ﻿import React, { useState, useEffect, useRef } from 'react';
 import { io } from 'socket.io-client';
 
-const socket = io('http://localhost:3000');
+const socket = io('https://dev-connect-backend-9kkh.onrender.com');
 
 interface Message {
   id?: number;
